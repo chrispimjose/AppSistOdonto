@@ -1,0 +1,225 @@
+@startuml
+/' Modelagem das Classes do Sistema SisOdonto '/
+left to right direction
+hide circle
+
+
+package "Model" {
+    class "Usuario" {
+        -idUser: int
+        -nome: string <150>
+        -cpf: string <11>
+        -telefone: string <11>
+        -tipoUsuario: string <Administrador, \nFuncionario, Aluno>
+        -email: string <150>
+        -textTemplate: string <2000>
+        +getId(): int
+        +getNome(): string
+        +getCpf(): string
+        +getTelefone(): string
+        +getTipoUsuario(): string
+        +getEmail(): string
+        +getBiometria(): string
+    }
+
+    Class "TipoProcedimento" {
+        -idProcedimento: int
+        -tipoProcedimento: double
+        +getId(): int
+        +getTipoProcedimento(): double
+    }
+
+    Class "MovimentoEntrada" {
+        -idCaixa: int
+        -caixa: string
+        -tipoProcedimento: int
+        -dataEntrada: Date
+        -detalheEntrada: string <200>
+        -alunoID: Usuario
+        -funcionarioID: Usuario
+        +getId(): int
+        +getTipoProcedimento(): int
+        +getDataEntrada(): Date
+        +getDetalheEntrada(): string
+        +getAlunoID(): Usuario
+        +getFuncionarioID(): Usuario
+    }
+
+        Class "MovimentoSaída" {
+        -idSaida: int
+        -caixaID: int
+        -caixa: string
+        -tipoProcedimento: int
+        -dataSaida: Date
+        -detalheSaida: string <200>
+        -alunoID: Usuario
+        -funcionarioID: Usuario
+        +getId(): int
+        +getTipoProcedimento(): int
+        +getDataSaida(): Date
+        +getDetalheSaida(): string
+        +getAlunoID(): Usuario
+        +getFuncionarioID(): Usuario
+    }
+
+    Usuario "1" -- "0..*" MovimentoEntrada : "gera"
+    Usuario "1" -- "0..*" MovimentoSaída : "gera"
+    TipoProcedimento "1" -up- "0..*" MovimentoEntrada : "associado a"
+    TipoProcedimento "1" -up- "0..*" MovimentoSaída : "associado a"
+
+}
+
+package "Controller" {
+    /' Controlador de autenticação do usuário '/
+        class "LoginController" {
+        +autenticarUsuario(cpf:string, senha: string): Usuario
+        +geraToken(): string
+        +deslogaUsuario(): void
+    }
+    /' De acordo com o tipo de usuário'/
+    class "UsuarioController" {
+        /' Controlador de usuários Funcionário - Administrador'/
+        /' Controlador de usuários Aluno - Funcionário'/
+        +cadastrarUsuario(usuario: Usuario): void
+        +validarCPF(cpf: string): string
+        +cadastrarBiometria(usuario: Usuario, biometria: string): void
+        +editarUsuario(usuario: Usuario): void
+        +excluirUsuario(idUser: int): void
+        +buscarUsuario(idUser: int): Usuario
+    }
+    /' Controlador de tipos de procedimentos'/
+    class "TipoProcedimentoController" {
+        /' Controlador de tipos de procedimentos - Administrador'/
+        +cadastrarTipoProcedimento()
+        +editarTipoProcedimento()
+        +excluirTipoProcedimento()
+        +buscarTipoProcedimento()
+    }
+
+    class "MovimentoEntradaController" {
+        /' Controlador de entrega de caixa - Funcionário'/
+        +cadastrarRecebimentoCaixa()
+        +validarBiometria()
+        +buscarCaixa(idMovimento: int): Movimento
+        +enviarEmailNotificacao()
+        +gerarRelatorioMovimentosEntrada(): void
+    }
+
+    class "MovimentoSaidaController" {
+        /' Controlador de devolução de caixa - Funcionário'/
+        +cadastrarDevololucaoCaixa()
+        +validarBiometria()
+        +buscarCaixa(idMovimento: int): Movimento
+        +enviarEmailNotificacao()
+        +gerarRelatorioMovimentosSaida(): void
+        +gerarRelatorioPendencias(): void
+    }
+
+    class "AdministradorController" {
+        /' Controlador de administração do sistema - Administrador'/
+        +cadastrarFuncionario(usuario: Usuario): void
+        +editarFuncionario(usuario: Usuario): void
+        +gerenciarUsuarios(): List<Usuario>
+        +gerenciarTiposProcedimentos(): List<TipoProcedimento>
+        +gerenciarMovimentosEntrada(): List<MovimentoEntrada>
+        +gerenciarMovimentosSaida(): List<MovimentoSaída>
+        +gerarRelatorioMovimentosEntrada(): void
+        +gerarRelatorioMovimentosSaida(): void
+        +gerarRelatorioUsuarios(): void
+        +gerarRelatorioTiposProcedimentos(): void
+        +gerarRelatorioMovimento(): void
+        +gerarRelatorioPendencias(): void
+        +gerarRelatorioEstatisticas(): void
+    }
+
+    LoginController *-right- "1" UsuarioController : "autentica"
+    LoginController *-right- "1" AdministradorController : "autentica"
+    AdministradorController "1..*" -down- "1..*" MovimentoEntradaController : "gerencia"
+    AdministradorController "1..*" -down- "1..*" MovimentoSaidaController : "gerencia"
+    UsuarioController "1" -up- "1..*" MovimentoEntradaController : "cadastra"
+    UsuarioController "1" -up- "1..*" MovimentoSaidaController : "cadastra"
+    AdministradorController "1" -- "1..*" TipoProcedimentoController : "cadastra/gerencia"
+
+    
+    }
+
+package "View" {
+    /' Interface de usuário para autenticação '/
+    class "LoginView" {
+        +exibirTelaLogin(): void
+        +exibirMensagemErro(mensagem: string): void
+    }
+
+    /' Interface de usuário para cadastro e edição de usuários '/
+    class "UsuarioView" {
+        +exibirTelaCadastroUsuario(): void  
+        +exibirTelaEdicaoUsuario(usuario: Usuario): void
+        +exibirMensagemSucesso(mensagem: string): void
+        +exibirMensagemErro(mensagem: string): void
+    }
+
+    /' Interface de usuário para tipos de procedimentos '/
+    class "TipoProcedimentoView" {
+        +exibirTelaCadastroTipoProcedimento(): void
+        +exibirTelaEdicaoTipoProcedimento(tipoProcedimento: TipoProcedimento): void
+        +exibirMensagemSucesso(mensagem: string): void
+        +exibirMensagemErro(mensagem: string): void
+    }
+
+    /' Interface de usuário para movimentação de entrada '/
+    class "MovimentoEntradaView" {  
+        +exibirTelaCadastroMovimentoEntrada(): void
+        +exibirTelaEdicaoMovimentoEntrada(movimento: MovimentoEntrada): void
+        +exibirMensagemSucesso(mensagem: string): void
+        +exibirMensagemErro(mensagem: string): void
+
+        +exibirTelaGerarRelatorioMovimentosEntrada(): void
+    }
+    /' Interface de usuário para movimentação de saída '/
+    class "MovimentoSaidaView" {
+        +exibirTelaCadastroMovimentoSaida(): void
+        +exibirTelaEdicaoMovimentoSaida(movimento: MovimentoSaída): void
+        +exibirMensagemSucesso(mensagem: string): void
+        +exibirMensagemErro(mensagem: string): void
+        
+        +exibirTelaGerarRelatorioMovimentosSaida(): void
+        +exibirTelaGerarRelatorioPendencias(): void
+    }
+
+    /' Interface de usuário para administração do sistema '/
+    class "AdministradorView" {
+        +exibirTelaGerenciamentoUsuarios(): void
+        +exibirTelaGerenciamentoTiposProcedimentos(): void
+        +exibirTelaGerenciamentoMovimentosEntrada(): void
+        +exibirTelaGerenciamentoMovimentosSaida(): void 
+
+        +exibirTelaGerarRelatorioMovimentosEntrada(): void
+        +exibirTelaGerarRelatorioMovimentosSaida(): void
+        +exibirTelaGerarRelatorioUsuarios(): void
+        +exibirTelaGerarRelatorioTiposProcedimentos(): void
+        +exibirTelaGerarRelatorioMovimento(): void
+        +exibirTelaGerarRelatorioPendencias(): void
+        +exibirTelaGerarRelatorioEstatisticas(): void
+        +exibirMensagemSucesso(mensagem: string): void
+        +exibirMensagemErro(mensagem: string): void
+    }
+}
+
+package "Servico" {
+    /' Serviço de autenticação '/
+    class "AutenticacaoServico" {
+        +validarCredenciais(cpf: string, biometria: string): boolean
+        +gerarToken(): string
+    }
+
+    /' Serviço de envio de e-mails '/
+    class "SmtpServerEnvio" {
+        +ConfigurarSmtp(destinatario: string, assunto: string, mensagem: string): static SmtpClient smtp
+        +ConfigurarMensagem(emaildestinatario: string, assunto: string, \n mensagem: string, assinatura:string): static var msg
+        +ProcessarEmail() : void
+    }
+}
+
+
+
+@enduml

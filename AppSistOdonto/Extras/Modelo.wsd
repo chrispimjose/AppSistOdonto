@@ -1,0 +1,36 @@
+@startuml
+
+/' Casos de Uso Sistema de Odontologia '/
+
+left to right direction
+
+actor "Funcionario" as Fun
+actor "Aluno" as Alu
+actor "Administrador" as Adm
+
+rectangle "Sistema" {
+  Fun -down-> (Cadastrar Aluno)
+  Fun -> (Consulta Aluno)
+  Fun -> (Atualiza Aluno)
+  Fun -> (Exclui Aluno)
+  Fun -> (Gerencia Alunos)
+  Fun -> (Cadastra Caixa)
+  Fun -> (Devolve Caixa)
+  Fun -> (Consulta Caixa)
+
+  Alu -up-> (Cadastra Caixa)
+  Alu -up-> (Consulta Dados Pessoais)
+  Alu <- (Email \n de Notificação) : Recebe
+  
+  Adm -up-> (Gerencia Funcionarios)
+  Adm -up-> (Gerencia Alunos)
+  Adm -up-> (Emite Relatórios)
+}
+
+(Sistema) --> (Email \n de Notificação)
+
+
+
+
+
+@enduml
